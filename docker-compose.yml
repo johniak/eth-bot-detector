@@ -1,0 +1,58 @@
+version: '3.7'
+
+volumes:
+  db:
+
+services:
+  app:
+    stdin_open: true
+    tty: true
+    env_file:
+      - .env
+    build:
+      context: app
+      dockerfile: ./Dockerfile
+    volumes:
+      - ./app:/code/
+    ports:
+      - 6066:6066
+    depends_on:
+      - kafka
+      - zookeeper
+      - schema-registry
+    command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- faust -A bot_detector.app worker -l info
+  zookeeper:
+    image: "confluentinc/cp-zookeeper"
+    hostname: zookeeper
+    ports:
+      - 32181:32181
+    env_file:
+      - .env
+  kafka:
+    image: confluentinc/cp-kafka
+    hostname: kafka
+    container_name: kafka
+    ports:
+      - 9092:9092
+      - 29092:29092
+    depends_on:
+      - zookeeper
+    env_file:
+      - .env
+  schema-registry:
+    image: confluentinc/cp-schema-registry
+    hostname: schema-registry
+    container_name: schema-registry
+    depends_on:
+      - kafka
+      - zookeeper
+    environment:
+      - SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL=zookeeper:32181
+      - SCHEMA_REGISTRY_HOST_NAME=schema-registry
+      - SCHEMA_REGISTRY_DEBUG=true
+  db:
+    image: mdillon/postgis:9.5-alpine
+    volumes:
+      - db:/data/postgres
+    env_file:
+      - .env
