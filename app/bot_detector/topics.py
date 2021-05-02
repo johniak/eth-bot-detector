@@ -1,5 +1,5 @@
 from bot_detector.app import app
-from bot_detector.models import TransactionModel
+from bot_detector.faust_models import TransactionModel
 
 blocks_topic = app.topic(
     "blocks_topic",
@@ -12,3 +12,5 @@ transactions_topic = app.topic(
     key_type=bytes,
     value_type=TransactionModel,
 )
+
+

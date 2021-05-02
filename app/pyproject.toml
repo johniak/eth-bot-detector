@@ -32,5 +32,6 @@ argh = "^0.26.2"
 requests = "^2.25.1"
 web3 = "^5.19.0"
 pyfcm = "^1.5.1"
-SQLAlchemy = "^1.4.12"
 psycopg2 = "^2.8.6"
+tortoise-orm = {extras = ["asyncpg"], version = "^0.17.2"}
+asyncpg = "^0.22.0"

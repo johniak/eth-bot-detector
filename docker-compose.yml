@@ -20,6 +20,7 @@ services:
       - kafka
       - zookeeper
       - schema-registry
+      - db
     command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- faust -A bot_detector.app worker -l info
   zookeeper:
     image: "confluentinc/cp-zookeeper"

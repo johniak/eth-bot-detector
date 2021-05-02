@@ -1,7 +1,9 @@
+import json
+
 from faust.web import Request, Response, View
 
-from bot_detector.alchemy_models import FcmToken, BotNotification
-from bot_detector.app import app, push_service, db_session
+from bot_detector.app import app, push_service
+from bot_detector.models import FcmToken
 
 
 @app.page("/fcm-token/")
@@ -11,14 +13,13 @@ class FcmTokenPage(View):
         token = body.get("token")
         if token is None:
             self.error(400, "Token was not provided")
-        print(BotNotification.query.join(BotNotification.fcm_token).filter(FcmToken.token.in_([token])).all())
-        if FcmToken.query.filter_by(token=token).count() != 0:
-            fcm_token = FcmToken.query.filter_by(token=token).first()
-            db_session.add(BotNotification(fcm_token=fcm_token, from_address="0xD"))
-            db_session.commit()
-            return self.json({"status": "ok"})
-        db_session.add(FcmToken(token=token))
-        db_session.commit()
+        if await FcmToken.filter(token=token).exists():
+            return self.json({"status": "ok", "already_exists": True})
+        await FcmToken.create(token=token)
 
-        # push_service.notify_multiple_devices(registration_ids=[token], message_title="win", message_body="win")
-        return self.json({"count": 1})
+        push_service.notify_multiple_devices(
+            registration_ids=[token],
+            message_title="Push Notification",
+            message_body="Your device is registered",
+        )
+        return self.json({"status": "ok", "already_exists": False})
